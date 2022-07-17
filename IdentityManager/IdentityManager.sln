@@ -7,10 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IdentityManager", "Identity
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IdentityManagerBlazorServer", "..\IdentityManagerBlazorServer\IdentityManagerBlazorServer.csproj", "{5605AA4A-2ACA-497D-B55E-5D883D7B5C17}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IdentityManagerBlazorServerSeedData", "IdentityManagerBlazorServerSeedData\IdentityManagerBlazorServerSeedData.csproj", "{01FBE16F-F02E-4135-87B3-A58DC0376C5C}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IdentityManagerBlazorWasm", "IdentityManagerBlazorWasm\IdentityManagerBlazorWasm.csproj", "{FBEC296B-A24A-46FD-B86F-EBCD657F2626}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,14 +21,6 @@ Global
 		{5605AA4A-2ACA-497D-B55E-5D883D7B5C17}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5605AA4A-2ACA-497D-B55E-5D883D7B5C17}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5605AA4A-2ACA-497D-B55E-5D883D7B5C17}.Release|Any CPU.Build.0 = Release|Any CPU
-		{01FBE16F-F02E-4135-87B3-A58DC0376C5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{01FBE16F-F02E-4135-87B3-A58DC0376C5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{01FBE16F-F02E-4135-87B3-A58DC0376C5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{01FBE16F-F02E-4135-87B3-A58DC0376C5C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FBEC296B-A24A-46FD-B86F-EBCD657F2626}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FBEC296B-A24A-46FD-B86F-EBCD657F2626}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FBEC296B-A24A-46FD-B86F-EBCD657F2626}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FBEC296B-A24A-46FD-B86F-EBCD657F2626}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

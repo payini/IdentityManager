@@ -636,7 +636,7 @@ Now, let's add a project reference to the `IdentityManager` class library, by ad
 
 Now let's add the **Users.razor** and **Roles.razor** pages under the **Pages** folder, with the following code:
 
-Users.razor file:
+**Users.razor** file:
 
 ```razor
 @page "/users"
@@ -813,7 +813,7 @@ else
 
 Add a **Components** folder, and add the following two files:
 
-1. AddUser.razor
+1. **AddUser.razor**
 
 ```razor
 @page "/createuser"
@@ -887,7 +887,7 @@ Add a **Components** folder, and add the following two files:
 }
 ```
 
-2. AddRole.razor
+2. **AddRole.razor**
 
 ```razor
 @page "/createrole"
@@ -995,9 +995,9 @@ Finally, modify the **Shared/NavMenu.razor** with the following code:
 }
 ```
 
-And run the application.
+Now, run the `IdentityManagerBlazorServer` application and you should be able to see the following:
 
-
+![Identity Manager Blazor Server Application](images/2b267a3351fb957f10a22eca7cac73c93373a456f8663f6a0bc6487ebb14148d.png)  
 
 ## Summary
 
@@ -1011,7 +1011,10 @@ The complete code for this demo can be found in the link below.
 
 ## Resources
 
-| Resource Title                   | Url                                                                        |
-| -------------------------------- | -------------------------------------------------------------------------- |
-| The .NET Show with Carl Franklin | <https://www.youtube.com/playlist?list=PL8h4jt35t1wgW_PqzZ9USrHvvnk8JMQy_> |
-| Download .NET                    | <https://dotnet.microsoft.com/en-us/download>                              |
+| Resource Title                                                                                    | Url                                                                                                   |
+| ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| The .NET Show with Carl Franklin                                                                  | <https://www.youtube.com/playlist?list=PL8h4jt35t1wgW_PqzZ9USrHvvnk8JMQy_>                            |
+| Download .NET                                                                                     | <https://dotnet.microsoft.com/en-us/download>                                                         |
+| Basic Authentication and Authorization in Blazor Server: Carl Franklin's Blazor Train ep 26       | <https://www.youtube.com/watch?v=mbNFscKBsy8&list=PL8h4jt35t1wjvwFnvcB2LlYL4jLRzRmoz&index=30&t=790s> |
+| Basic Authentication and Authorization in Blazor Web Assembly: Carl Franklin's Blazor Train ep 27 | https://www.youtube.com/watch?v=I3A1R-oBK7c&list=PL8h4jt35t1wjvwFnvcB2LlYL4jLRzRmoz&index=31          |
+| mguinness/IdentityManagerUI                                                                       | <https://github.com/mguinness/IdentityManagerUI>                                                      |
