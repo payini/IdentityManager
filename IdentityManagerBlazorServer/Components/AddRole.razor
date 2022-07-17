@@ -1,0 +1,49 @@
+﻿@page "/createrole"
+@using IdentityManager
+@using IdentityManagerBlazorServer.ViewModels
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Logging
+@inject IdentityManager.Manager manager;
+
+<EditForm Model="@role" OnValidSubmit="@CreateRole">
+    <div class="row">
+        <div class="col3">
+            Role name:
+        </div>
+        <div class="col9">
+            <InputText id="name" @bind-Value="role.Name" />
+        </div>
+    </div>
+    <br />
+
+    <button type="submit">Submit</button>
+    <br />
+    <br />
+</EditForm>
+
+
+@if (createRole)
+{
+    @if (response?.Success == true)
+    {
+        <div style="color:green;">Role created successfully.</div>
+    }
+    else
+    {
+        <div style="color:red;">An error has occurred when creating role: @response?.Messages</div>
+    }
+}
+
+@code {
+    private ViewModels.RoleViewModel role = new();
+    private IEnumerable<IdentityManager.Role>? roles;
+    private Response? response = null;
+    private bool createRole = false;
+
+    private async void CreateRole()
+    {
+        createRole = true;
+        response = await manager!.CreateRole(role.Name!);
+        StateHasChanged();
+    }
+}
