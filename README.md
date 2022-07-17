@@ -1001,7 +1001,9 @@ Now, run the `IdentityManagerBlazorServer` application and you should be able to
 
 ## Summary
 
-For more information about Blazor, check the links in the resources section below.
+In this demo, we built a `netstandard` class library based on the `GitHub` repo by [mguinness](https://github.com/mguinness/IdentityManagerUI), and we built a Blazor Server application to make use of the `netstandard` class library we created, to add/list/delete users and roles.
+
+For more information about the technologies used, check the links in the resources section below.
 
 ## Complete Code
 
