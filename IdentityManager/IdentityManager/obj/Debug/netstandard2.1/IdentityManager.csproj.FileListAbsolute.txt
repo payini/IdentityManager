@@ -1,0 +1,10 @@
+Y:\IdentityManager\IdentityManager\IdentityManager\bin\Debug\netstandard2.1\IdentityManager.deps.json
+Y:\IdentityManager\IdentityManager\IdentityManager\bin\Debug\netstandard2.1\IdentityManager.dll
+Y:\IdentityManager\IdentityManager\IdentityManager\bin\Debug\netstandard2.1\IdentityManager.pdb
+Y:\IdentityManager\IdentityManager\IdentityManager\obj\Debug\netstandard2.1\IdentityManager.csproj.AssemblyReference.cache
+Y:\IdentityManager\IdentityManager\IdentityManager\obj\Debug\netstandard2.1\IdentityManager.GeneratedMSBuildEditorConfig.editorconfig
+Y:\IdentityManager\IdentityManager\IdentityManager\obj\Debug\netstandard2.1\IdentityManager.AssemblyInfoInputs.cache
+Y:\IdentityManager\IdentityManager\IdentityManager\obj\Debug\netstandard2.1\IdentityManager.AssemblyInfo.cs
+Y:\IdentityManager\IdentityManager\IdentityManager\obj\Debug\netstandard2.1\IdentityManager.csproj.CoreCompileInputs.cache
+Y:\IdentityManager\IdentityManager\IdentityManager\obj\Debug\netstandard2.1\IdentityManager.dll
+Y:\IdentityManager\IdentityManager\IdentityManager\obj\Debug\netstandard2.1\IdentityManager.pdb
