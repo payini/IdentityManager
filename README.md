@@ -651,11 +651,160 @@ Open the `Package Manager Console`:
 
 And run the following command:
 
-`update-database` to create the `IdentityManager` database, which you can see by opening the `SQL Server Object Explorer`
+`update-database` to create the `IdentityManager` database.
+
+You should see the following output:
+
+```powershell
+PM> update-database
+Build started...
+Build succeeded.
+Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 6.0.7 initialized 'ApplicationDbContext' using provider 'Microsoft.EntityFrameworkCore.SqlServer:6.0.7' with options: None
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (146ms) [Parameters=[], CommandType='Text', CommandTimeout='60']
+      CREATE DATABASE [IdentityManager];
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (73ms) [Parameters=[], CommandType='Text', CommandTimeout='60']
+      IF SERVERPROPERTY('EngineEdition') <> 5
+      BEGIN
+          ALTER DATABASE [IdentityManager] SET READ_COMMITTED_SNAPSHOT ON;
+      END;
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT 1
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE [__EFMigrationsHistory] (
+          [MigrationId] nvarchar(150) NOT NULL,
+          [ProductVersion] nvarchar(32) NOT NULL,
+          CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+      );
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT 1
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT OBJECT_ID(N'[__EFMigrationsHistory]');
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT [MigrationId], [ProductVersion]
+      FROM [__EFMigrationsHistory]
+      ORDER BY [MigrationId];
+Microsoft.EntityFrameworkCore.Migrations[20402]
+      Applying migration '00000000000000_CreateIdentitySchema'.
+Applying migration '00000000000000_CreateIdentitySchema'.
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE [AspNetRoles] (
+          [Id] nvarchar(450) NOT NULL,
+          [Name] nvarchar(256) NULL,
+          [NormalizedName] nvarchar(256) NULL,
+          [ConcurrencyStamp] nvarchar(max) NULL,
+          CONSTRAINT [PK_AspNetRoles] PRIMARY KEY ([Id])
+      );
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE [AspNetUsers] (
+          [Id] nvarchar(450) NOT NULL,
+          [UserName] nvarchar(256) NULL,
+          [NormalizedUserName] nvarchar(256) NULL,
+          [Email] nvarchar(256) NULL,
+          [NormalizedEmail] nvarchar(256) NULL,
+          [EmailConfirmed] bit NOT NULL,
+          [PasswordHash] nvarchar(max) NULL,
+          [SecurityStamp] nvarchar(max) NULL,
+          [ConcurrencyStamp] nvarchar(max) NULL,
+          [PhoneNumber] nvarchar(max) NULL,
+          [PhoneNumberConfirmed] bit NOT NULL,
+          [TwoFactorEnabled] bit NOT NULL,
+          [LockoutEnd] datetimeoffset NULL,
+          [LockoutEnabled] bit NOT NULL,
+          [AccessFailedCount] int NOT NULL,
+          CONSTRAINT [PK_AspNetUsers] PRIMARY KEY ([Id])
+      );
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE [AspNetRoleClaims] (
+          [Id] int NOT NULL IDENTITY,
+          [RoleId] nvarchar(450) NOT NULL,
+          [ClaimType] nvarchar(max) NULL,
+          [ClaimValue] nvarchar(max) NULL,
+          CONSTRAINT [PK_AspNetRoleClaims] PRIMARY KEY ([Id]),
+          CONSTRAINT [FK_AspNetRoleClaims_AspNetRoles_RoleId] FOREIGN KEY ([RoleId]) REFERENCES [AspNetRoles] ([Id]) ON DELETE CASCADE
+      );
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE [AspNetUserClaims] (
+          [Id] int NOT NULL IDENTITY,
+          [UserId] nvarchar(450) NOT NULL,
+          [ClaimType] nvarchar(max) NULL,
+          [ClaimValue] nvarchar(max) NULL,
+          CONSTRAINT [PK_AspNetUserClaims] PRIMARY KEY ([Id]),
+          CONSTRAINT [FK_AspNetUserClaims_AspNetUsers_UserId] FOREIGN KEY ([UserId]) REFERENCES [AspNetUsers] ([Id]) ON DELETE CASCADE
+      );
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE [AspNetUserLogins] (
+          [LoginProvider] nvarchar(128) NOT NULL,
+          [ProviderKey] nvarchar(128) NOT NULL,
+          [ProviderDisplayName] nvarchar(max) NULL,
+          [UserId] nvarchar(450) NOT NULL,
+          CONSTRAINT [PK_AspNetUserLogins] PRIMARY KEY ([LoginProvider], [ProviderKey]),
+          CONSTRAINT [FK_AspNetUserLogins_AspNetUsers_UserId] FOREIGN KEY ([UserId]) REFERENCES [AspNetUsers] ([Id]) ON DELETE CASCADE
+      );
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE [AspNetUserRoles] (
+          [UserId] nvarchar(450) NOT NULL,
+          [RoleId] nvarchar(450) NOT NULL,
+          CONSTRAINT [PK_AspNetUserRoles] PRIMARY KEY ([UserId], [RoleId]),
+          CONSTRAINT [FK_AspNetUserRoles_AspNetRoles_RoleId] FOREIGN KEY ([RoleId]) REFERENCES [AspNetRoles] ([Id]) ON DELETE CASCADE,
+          CONSTRAINT [FK_AspNetUserRoles_AspNetUsers_UserId] FOREIGN KEY ([UserId]) REFERENCES [AspNetUsers] ([Id]) ON DELETE CASCADE
+      );
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE [AspNetUserTokens] (
+          [UserId] nvarchar(450) NOT NULL,
+          [LoginProvider] nvarchar(128) NOT NULL,
+          [Name] nvarchar(128) NOT NULL,
+          [Value] nvarchar(max) NULL,
+          CONSTRAINT [PK_AspNetUserTokens] PRIMARY KEY ([UserId], [LoginProvider], [Name]),
+          CONSTRAINT [FK_AspNetUserTokens_AspNetUsers_UserId] FOREIGN KEY ([UserId]) REFERENCES [AspNetUsers] ([Id]) ON DELETE CASCADE
+      );
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE INDEX [IX_AspNetRoleClaims_RoleId] ON [AspNetRoleClaims] ([RoleId]);
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE UNIQUE INDEX [RoleNameIndex] ON [AspNetRoles] ([NormalizedName]) WHERE [NormalizedName] IS NOT NULL;
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE INDEX [IX_AspNetUserClaims_UserId] ON [AspNetUserClaims] ([UserId]);
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE INDEX [IX_AspNetUserLogins_UserId] ON [AspNetUserLogins] ([UserId]);
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE INDEX [IX_AspNetUserRoles_RoleId] ON [AspNetUserRoles] ([RoleId]);
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE INDEX [EmailIndex] ON [AspNetUsers] ([NormalizedEmail]);
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE UNIQUE INDEX [UserNameIndex] ON [AspNetUsers] ([NormalizedUserName]) WHERE [NormalizedUserName] IS NOT NULL;
+Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+      VALUES (N'00000000000000_CreateIdentitySchema', N'6.0.7');
+Done.
+```
+
+You can see the created database and the Identity tables by opening the `SQL Server Object Explorer`.
 
 ![SQL Server Object Explorer](images/c399c2a4ba3afcfb3355dcb07ed2ec80ff0cc2da9ee65e221437e364c8964058.png)  
 
-![SQL Server Object Explorer Database](images/5f8dc6b1762e56c5bb04967111b805edb26584e332f4d2069d89b96f30d8341f.png)  
+![SQL Server Object Explorer Database](images/1b31ae57fdcc5a9f8a915aa77b206e3ea9e3454f75889b9a9750c76e0775cdc1.png)  
 
 Now, let's add a project reference to the `IdentityManager` class library, by adding the following code to the **IdentityManagerBlazorServer.csproj** file:
 
@@ -667,7 +816,7 @@ Now, let's add a project reference to the `IdentityManager` class library, by ad
 
 Now let's add the **Users.razor** and **Roles.razor** pages under the **Pages** folder, with the following code:
 
-**Users.razor** file:
+File **Users.razor**:
 
 ```razor
 @page "/users"
@@ -770,7 +919,7 @@ else
 }
 ```
 
-Razor.razor file:
+File Razor.razor:
 
 ```razor
 @page "/roles"
@@ -913,7 +1062,7 @@ Add a **CheckBoxList.razor** under the **Shared** folder with the following code
 
 Add a **Components** folder, and add files **CreateRole.razor**, **CreateUser.razor**, and **EditUser.razor**, with the following code:
 
-1. **CreateRole.razor**
+File **CreateRole.razor**:
 
 ```razor
 @page "/createrole"
@@ -969,7 +1118,7 @@ Add a **Components** folder, and add files **CreateRole.razor**, **CreateUser.ra
 }
 ```
 
-1. **CreateUser.razor**
+File **CreateUser.razor**:
 
 ```razor
 @page "/createuser"
@@ -1044,7 +1193,7 @@ Add a **Components** folder, and add files **CreateRole.razor**, **CreateUser.ra
 }
 ```
 
-1. **EditUser.razor**
+File **EditUser.razor**:
 
 ```razor
 @page "/edituser/{userId}"
@@ -1212,7 +1361,7 @@ Give it a try, and create users, roles, and assign roles to users.
 
 ## Summary
 
-In this demo, we built a `netstandard` class library based on the `GitHub` repo by [mguinness](https://github.com/mguinness/IdentityManagerUI), to provide CRUD operations to Microsoft's Identity tables.
+In this demo, we built a `netstandard` class library based on the `GitHub` repo by [mguinness](https://github.com/mguinness/IdentityManagerUI), to provide CRUD operations to Microsoft Identity tables.
 
 Then we built a basic Blazor Server application to make use of the `netstandard` class library we created, to provide a UI to add/list/delete users, and roles.
 
