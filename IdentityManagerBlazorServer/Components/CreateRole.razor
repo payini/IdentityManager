@@ -5,7 +5,10 @@
 @using Microsoft.Extensions.Logging
 @inject IdentityManager.Manager manager;
 
-<EditForm Model="@role" OnValidSubmit="@CreateRole">
+<h3><b>Create Role</b></h3>  
+<hr/>
+
+<EditForm Model="@role" OnValidSubmit="@OnCreateRole">
     <div class="row">
         <div class="col3">
             Role name:
@@ -16,7 +19,7 @@
     </div>
     <br />
 
-    <button type="submit">Submit</button>
+    <button type="submit">Save</button>
     <br />
     <br />
 </EditForm>
@@ -35,12 +38,11 @@
 }
 
 @code {
-    private ViewModels.RoleViewModel role = new();
-    private IEnumerable<IdentityManager.Role>? roles;
+    private ViewModels.CreateRoleViewModel role = new();
     private Response? response = null;
     private bool createRole = false;
 
-    private async void CreateRole()
+    private async void OnCreateRole()
     {
         createRole = true;
         response = await manager!.CreateRole(role.Name!);

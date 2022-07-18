@@ -2,7 +2,7 @@
 
 namespace IdentityManagerBlazorServer.ViewModels
 {
-    public class UserViewModel
+    public class CreateUserViewModel
     {
         [Required]
         public string? UserName { get; set; }

@@ -5,7 +5,9 @@
 @using Microsoft.Extensions.Logging
 @inject IdentityManager.Manager manager;
 
-<EditForm Model="@user" OnValidSubmit="@CreateUser">
+<EditForm Model="@user" OnValidSubmit="@OnCreateUser">
+    <h3><b>Create User</b></h3>  
+    <hr/>  
     <div class="row">
         <div class="col3">
             Username:
@@ -34,7 +36,7 @@
     </div>
     <br />
 
-    <button type="submit">Submit</button>
+    <button type="submit">Save</button>
     <br />
     <br />
 
@@ -55,12 +57,11 @@
 }
 
 @code {
-    private ViewModels.UserViewModel user = new();
-    private IEnumerable<ViewModels.RoleViewModel>? roles;
+    private ViewModels.CreateUserViewModel user = new();
     private Response? response = null;
     private bool createUser = false;
 
-    private async void CreateUser()
+    private async void OnCreateUser()
     {
         createUser = true;
         response = await manager!.CreateUser(user.UserName!, user.Name!, user.Email!, user.Password!);

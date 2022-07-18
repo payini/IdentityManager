@@ -5,7 +5,8 @@
 
 <PageTitle>Users</PageTitle>
 
-<h1>Users</h1>
+<h3><b>Users</b></h3>  
+<hr/>  
 
 @if (users == null)
 {
@@ -24,7 +25,7 @@ else
             Filter:
         </div>
         <div class="col9">
-             <input @bind-value:event="oninput" @bind-value="Filter" @onkeyup="GetUsers" />
+            <input @bind-value:event="oninput" @bind-value="Filter" @onkeyup="GetUsers" />
         </div>
     </div>
 
@@ -50,10 +51,15 @@ else
                     <td>
                         @foreach (var role in user.Roles!)
                         {
-                            <text>role</text>
+                            <text>@role</text><br/>
                         }
                     </td>
                     <td>@user.LockedOut</td>
+                    <td>
+                        <a class="btn btn-primary" href="edituser/@user.Id">
+                            Edit
+                        </a>
+                    </td>
                     <td><button type="button" class="btn btn-secondary" @onclick="() => DeleteUser(user.Id!)">Delete</button></td>
                 </tr>
             }
@@ -87,6 +93,6 @@ else
     private void GetUsers()
     {
         users = manager.GetUsers(Filter);
-        StateHasChanged(); 
+        StateHasChanged();
     }
 }
