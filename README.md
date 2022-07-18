@@ -22,7 +22,15 @@ Then, we are going to build a Blazor Server application, and make use of the `ne
 
 The end results will look like this:
 
-![Identity Manager Blazor Server](images/c59fffe236995a4db4db3e345d3394b588e7e71cf0ffe5b8c737c6ef878a7f77.png)
+![Identity Manager Blazor Server](images/e7c5f796d28e1c9a13ca91f4cec6145952ae479b9e1624b40d657ce7af4ca28b.png)
+
+![Create User](images/172dab70f39ce54a7525a9c5a9c801635c75f1e310a9ddf6781666a99a3823f0.png)  
+
+![Roles](images/b2125bc57ccf42c602918243ffd78b05bfdead528baf2ead0385c6a18b8dfb6e.png)  
+
+![Create Role](images/6c548cfb8677954bdb1b2de127e67ce52d2d76086a395b5fa611b91047242698.png)  
+
+![Edit User](images/27d52261e10cf9d02b97051c25223a7ce8a70cc06e3ca7499aacb140b2abb484.png)  
 
 ## Prerequisites
 
@@ -147,16 +155,17 @@ namespace IdentityManager
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
-        private readonly Dictionary<string, string> _roles;
-        private readonly Dictionary<string, string> _claimTypes;
+        public Dictionary<string, string> Roles;
+        public readonly Dictionary<string, string> ClaimTypes;
 
         public Manager(UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
-            _roles = roleManager.Roles.ToDictionary(r => r.Id, r => r.Name);
+            Roles = roleManager.Roles.OrderBy(r => r.Name).ToDictionary(r => r.Id, r => r.Name);
+
             var fldInfo = typeof(ClaimTypes).GetFields(BindingFlags.Static | BindingFlags.Public);
-            _claimTypes = fldInfo.ToDictionary(i => i.Name, i => (string)i.GetValue(null));
+            ClaimTypes = fldInfo.ToDictionary(i => i.Name, i => (string)i.GetValue(null));
         }
 
         public IEnumerable<User> GetUsers(string? filter = null) // , string direction = "asc"
@@ -175,10 +184,10 @@ namespace IdentityManager
                 Id = u.Id,
                 Email = u.Email,
                 LockedOut = u.LockoutEnd == null ? string.Empty : "Yes",
-                Roles = u.Roles.Select(r => _roles[r.RoleId]),
+                Roles = u.Roles.Select(r => Roles[r.RoleId]),
                 //Key/Value props not camel cased (https://github.com/dotnet/corefx/issues/41309)
-                Claims = u.Claims.Select(c => new KeyValuePair<string, string>(_claimTypes.Single(x => x.Value == c.ClaimType).Key, c.ClaimValue)),
-                DisplayName = u.Claims?.FirstOrDefault(c => c.ClaimType == ClaimTypes.Name)?.ClaimValue,
+                Claims = u.Claims.Select(c => new KeyValuePair<string, string>(ClaimTypes.Single(x => x.Value == c.ClaimType).Key, c.ClaimValue)),
+                DisplayName = u.Claims?.FirstOrDefault(c => c.ClaimType == System.Security.Claims.ClaimTypes.Name)?.ClaimValue,
                 UserName = u.UserName
             });
 
@@ -206,7 +215,7 @@ namespace IdentityManager
             if (result.Succeeded)
             {
                 if (name != null)
-                    await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Name, name));
+                    await _userManager.AddClaimAsync(user, new Claim(System.Security.Claims.ClaimTypes.Name, name));
             }
             else
             {
@@ -218,6 +227,19 @@ namespace IdentityManager
             return response;
         }
 
+        public async Task<ApplicationUser> GetUser(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                throw new ArgumentNullException("id", "The argument id cannot be null or empty.");
+
+            var user = await _userManager.FindByIdAsync(id);
+
+            if (user == null)
+                throw new ArgumentException("User not found");
+
+            return user;
+        }
+
         public async Task<Response> UpdateUser(string id, string email, bool locked, string[] roles, List<KeyValuePair<string, string>> claims)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -225,6 +247,9 @@ namespace IdentityManager
 
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentNullException("email", "The argument email cannot be null or empty.");
+
+            if (roles == null)
+                throw new ArgumentNullException("roles", "The argument roles cannot be null.");
 
             var response = new Response();
 
@@ -253,10 +278,10 @@ namespace IdentityManager
 
                     var userClaims = await _userManager.GetClaimsAsync(user);
 
-                    foreach (var kvp in claims.Where(a => !userClaims.Any(b => _claimTypes[a.Key] == b.Type && a.Value == b.Value)))
-                        await _userManager.AddClaimAsync(user, new Claim(_claimTypes[kvp.Key], kvp.Value));
+                    foreach (var kvp in claims.Where(a => !userClaims.Any(b => ClaimTypes[a.Key] == b.Type && a.Value == b.Value)))
+                        await _userManager.AddClaimAsync(user, new Claim(ClaimTypes[kvp.Key], kvp.Value));
 
-                    foreach (var claim in userClaims.Where(a => !claims.Any(b => a.Type == _claimTypes[b.Key] && a.Value == b.Value)))
+                    foreach (var claim in userClaims.Where(a => !claims.Any(b => a.Type == ClaimTypes[b.Key] && a.Value == b.Value)))
                         await _userManager.RemoveClaimAsync(user, claim);
                 }
                 else
@@ -359,7 +384,7 @@ namespace IdentityManager
                 Id = r.Id,
                 Name = r.Name,
                 //Key/Value props not camel cased (https://github.com/dotnet/corefx/issues/41309)
-                Claims = r.Claims.Select(c => new KeyValuePair<string, string>(_claimTypes.Single(x => x.Value == c.ClaimType).Key, c.ClaimValue))
+                Claims = r.Claims.Select(c => new KeyValuePair<string, string>(ClaimTypes.Single(x => x.Value == c.ClaimType).Key, c.ClaimValue))
             });
 
             return result;
@@ -381,9 +406,11 @@ namespace IdentityManager
 
             response.Success = result.Succeeded;
 
+            Roles = _roleManager.Roles.OrderBy(r => r.Name).ToDictionary(r => r.Id, r => r.Name);
+
             return response;
         }
-       
+
         public async Task<Response> UpdateRole(string id, string name, List<KeyValuePair<string, string>> claims)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -410,10 +437,10 @@ namespace IdentityManager
 
                     var roleClaims = await _roleManager.GetClaimsAsync(role);
 
-                    foreach (var kvp in claims.Where(a => !roleClaims.Any(b => _claimTypes[a.Key] == b.Type && a.Value == b.Value)))
-                        await _roleManager.AddClaimAsync(role, new Claim(_claimTypes[kvp.Key], kvp.Value));
+                    foreach (var kvp in claims.Where(a => !roleClaims.Any(b => ClaimTypes[a.Key] == b.Type && a.Value == b.Value)))
+                        await _roleManager.AddClaimAsync(role, new Claim(ClaimTypes[kvp.Key], kvp.Value));
 
-                    foreach (var claim in roleClaims.Where(a => !claims.Any(b => a.Type == _claimTypes[b.Key] && a.Value == b.Value)))
+                    foreach (var claim in roleClaims.Where(a => !claims.Any(b => a.Type == ClaimTypes[b.Key] && a.Value == b.Value)))
                         await _roleManager.RemoveClaimAsync(role, claim);
                 }
                 else
@@ -425,6 +452,8 @@ namespace IdentityManager
             {
                 response.Messages = $"Failure updating role {id}: {ex.Message}";
             }
+
+            Roles = _roleManager.Roles.OrderBy(r => r.Name).ToDictionary(r => r.Id, r => r.Name);
 
             return response;
         }
@@ -455,6 +484,8 @@ namespace IdentityManager
             {
                 response.Messages = $"Failure deleting role {id}: {ex.Message}";
             }
+
+            Roles = _roleManager.Roles.OrderBy(r => r.Name).ToDictionary(r => r.Id, r => r.Name);
 
             return response;
         }
@@ -626,7 +657,7 @@ And run the following command:
 
 ![SQL Server Object Explorer Database](images/5f8dc6b1762e56c5bb04967111b805edb26584e332f4d2069d89b96f30d8341f.png)  
 
-Now, let's add a project reference to the `IdentityManager` class library, by adding the following code to the `IdentityManagerBlazorServer.csproj` file:
+Now, let's add a project reference to the `IdentityManager` class library, by adding the following code to the **IdentityManagerBlazorServer.csproj** file:
 
 ```xml
   <ItemGroup>
@@ -646,7 +677,8 @@ Now let's add the **Users.razor** and **Roles.razor** pages under the **Pages** 
 
 <PageTitle>Users</PageTitle>
 
-<h1>Users</h1>
+<h3><b>Users</b></h3>  
+<hr/>  
 
 @if (users == null)
 {
@@ -665,7 +697,7 @@ else
             Filter:
         </div>
         <div class="col9">
-             <input @bind-value:event="oninput" @bind-value="Filter" @onkeyup="GetUsers" />
+            <input @bind-value:event="oninput" @bind-value="Filter" @onkeyup="GetUsers" />
         </div>
     </div>
 
@@ -691,10 +723,15 @@ else
                     <td>
                         @foreach (var role in user.Roles!)
                         {
-                            <text>role</text>
+                            <text>@role</text><br/>
                         }
                     </td>
                     <td>@user.LockedOut</td>
+                    <td>
+                        <a class="btn btn-primary" href="edituser/@user.Id">
+                            Edit
+                        </a>
+                    </td>
                     <td><button type="button" class="btn btn-secondary" @onclick="() => DeleteUser(user.Id!)">Delete</button></td>
                 </tr>
             }
@@ -728,7 +765,7 @@ else
     private void GetUsers()
     {
         users = manager.GetUsers(Filter);
-        StateHasChanged(); 
+        StateHasChanged();
     }
 }
 ```
@@ -743,7 +780,8 @@ Razor.razor file:
 
 <PageTitle>Roles</PageTitle>
 
-<h1>Roles</h1>
+<h3><b>Roles</b></h3>  
+<hr/>  
 
 
 @if (roles == null)
@@ -811,9 +849,127 @@ else
 }
 ```
 
-Add a **Components** folder, and add the following two files:
+Blazor, does not have an out-of-the-box component for Checkbox Lists, so in order to add/edit roles for a user, we are going to add a custom component based on this blog article [How To Create A Checkbox List In Blazor](https://www.c-sharpcorner.com/article/how-to-create-a-checkbox-list-in-blazor/).
 
-1. **AddUser.razor**
+Add a **CheckBoxList.razor** under the **Shared** folder with the following code:
+
+```razor
+@typeparam TItem  
+<div style=@Style>  
+    @if (Data != null)  
+    {  
+        foreach (var item in Data)  
+        {  
+            var Text = TextField?.Invoke(item);  
+            var Value = ValueField?.Invoke(item).ToString();  
+            bool Checked = false;  
+            if (SelectedValues.Contains(Value))  
+            {  
+                Checked = true;  
+            }  
+            <input type="checkbox" checked=@Checked  
+                   @onchange="eventArgs => { CheckboxClicked(Value, eventArgs.Value); }" />  
+           <span>&nbsp;</span> @Text <br />  
+        }  
+    }  
+    @ChildContent  
+</div>  
+  
+@code {  
+    //Data for the Checkbox   
+    [Parameter] public IEnumerable<TItem> Data { get; set; }  
+    // The field to be shown adjacent to checkbox  
+    [Parameter] public Func<TItem, string> TextField { get; set; }  
+    // The Value which checkbox will return when checked   
+    [Parameter] public Func<TItem, object> ValueField { get; set; }  
+    // CSS Style for the Checkbox container   
+    [Parameter] public string Style { get; set; }  
+    // Any child content for the control (if needed)  
+    [Parameter] public RenderFragment ChildContent { get; set; }  
+    // The array which contains the list of selected checkboxes   
+    [Parameter] public List<string> SelectedValues { get; set; }  
+  
+    //Method to update the selected value on click on checkbox   
+    public void CheckboxClicked(string aSelectedId, object aChecked)  
+    {  
+        if ((bool)aChecked)  
+        {  
+            if (!SelectedValues.Contains(aSelectedId))  
+            {  
+                SelectedValues.Add(aSelectedId);  
+            }  
+        }  
+        else  
+        {  
+            if (SelectedValues.Contains(aSelectedId))  
+            {  
+                SelectedValues.Remove(aSelectedId);  
+            }  
+        }  
+        StateHasChanged();  
+    }  
+}  
+```
+
+Add a **Components** folder, and add files **CreateRole.razor**, **CreateUser.razor**, and **EditUser.razor**, with the following code:
+
+1. **CreateRole.razor**
+
+```razor
+@page "/createrole"
+@using IdentityManager
+@using IdentityManagerBlazorServer.ViewModels
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Logging
+@inject IdentityManager.Manager manager;
+
+<h3><b>Create Role</b></h3>  
+<hr/>
+
+<EditForm Model="@role" OnValidSubmit="@OnCreateRole">
+    <div class="row">
+        <div class="col3">
+            Role name:
+        </div>
+        <div class="col9">
+            <InputText id="name" @bind-Value="role.Name" />
+        </div>
+    </div>
+    <br />
+
+    <button type="submit">Save</button>
+    <br />
+    <br />
+</EditForm>
+
+
+@if (createRole)
+{
+    @if (response?.Success == true)
+    {
+        <div style="color:green;">Role created successfully.</div>
+    }
+    else
+    {
+        <div style="color:red;">An error has occurred when creating role: @response?.Messages</div>
+    }
+}
+
+@code {
+    private ViewModels.CreateRoleViewModel role = new();
+    private Response? response = null;
+    private bool createRole = false;
+
+    private async void OnCreateRole()
+    {
+        createRole = true;
+        response = await manager!.CreateRole(role.Name!);
+        StateHasChanged();
+    }
+}
+```
+
+1. **CreateUser.razor**
 
 ```razor
 @page "/createuser"
@@ -823,7 +979,9 @@ Add a **Components** folder, and add the following two files:
 @using Microsoft.Extensions.Logging
 @inject IdentityManager.Manager manager;
 
-<EditForm Model="@user" OnValidSubmit="@CreateUser">
+<EditForm Model="@user" OnValidSubmit="@OnCreateUser">
+    <h3><b>Create User</b></h3>  
+    <hr/>  
     <div class="row">
         <div class="col3">
             Username:
@@ -852,7 +1010,7 @@ Add a **Components** folder, and add the following two files:
     </div>
     <br />
 
-    <button type="submit">Submit</button>
+    <button type="submit">Save</button>
     <br />
     <br />
 
@@ -873,12 +1031,11 @@ Add a **Components** folder, and add the following two files:
 }
 
 @code {
-    private ViewModels.UserViewModel user = new();
-    private IEnumerable<ViewModels.RoleViewModel>? roles;
+    private ViewModels.CreateUserViewModel user = new();
     private Response? response = null;
     private bool createUser = false;
 
-    private async void CreateUser()
+    private async void OnCreateUser()
     {
         createUser = true;
         response = await manager!.CreateUser(user.UserName!, user.Name!, user.Email!, user.Password!);
@@ -887,55 +1044,104 @@ Add a **Components** folder, and add the following two files:
 }
 ```
 
-2. **AddRole.razor**
+1. **EditUser.razor**
 
 ```razor
-@page "/createrole"
+@page "/edituser/{userId}"
 @using IdentityManager
 @using IdentityManagerBlazorServer.ViewModels
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.Extensions.Logging
 @inject IdentityManager.Manager manager;
 
-<EditForm Model="@role" OnValidSubmit="@CreateRole">
+<EditForm Model="@user" OnValidSubmit="@UpdateUser">
+    <h3><b>Edit User</b></h3>
+    <hr />
     <div class="row">
         <div class="col3">
-            Role name:
+            Username:
         </div>
         <div class="col9">
-            <InputText id="name" @bind-Value="role.Name" />
+            <InputText id="userName" disabled @bind-Value="currentUser!.UserName" />
         </div>
+        <div class="col3">
+            Email:
+        </div>
+        <div class="col9">
+            <InputText id="email" @bind-Value="user.Email" />
+        </div>
+        <br />
+        <br />
+        <h4><b>Roles</b></h4>
+        <br />
+        <CheckBoxList Data="@roles"
+                      TextField="@((item)=>item.Value)"
+                      ValueField="@((item)=>item.Value)"
+                      SelectedValues="@selectedRoles" />
     </div>
     <br />
 
-    <button type="submit">Submit</button>
+    <button type="submit">Save</button>
     <br />
     <br />
+
+    <DataAnnotationsValidator />
+    <ValidationSummary />
 </EditForm>
 
-
-@if (createRole)
+@if (editUser)
 {
     @if (response?.Success == true)
     {
-        <div style="color:green;">Role created successfully.</div>
+        <div style="color:green;">User updated successfully.</div>
     }
     else
     {
-        <div style="color:red;">An error has occurred when creating role: @response?.Messages</div>
+        <div style="color:red;">An error has occurred when updating user: @response?.Messages</div>
     }
 }
 
 @code {
-    private ViewModels.RoleViewModel role = new();
-    private IEnumerable<IdentityManager.Role>? roles;
+    [Parameter]
+    public string? userId { get; set; }
+    private ApplicationUser? currentUser;
+    private ViewModels.EditUserViewModel user = new();
     private Response? response = null;
-    private bool createRole = false;
+    private bool editUser = false;
+    private Dictionary<string, string>? roles;
+    private  List<KeyValuePair<string, string>>? claims = new();
+    protected List<string> selectedRoles = new List<string>();
 
-    private async void CreateRole()
+    protected async override void OnInitialized()
     {
-        createRole = true;
-        response = await manager!.CreateRole(role.Name!);
+        currentUser = await manager!.GetUser(userId!);
+
+        roles = manager.Roles;
+
+        foreach (var role in currentUser.Roles!)
+        {
+            if (roles.ContainsKey(role.RoleId))
+            {
+                selectedRoles.Add(roles[role.RoleId]);
+            }
+        }
+
+
+        foreach (var claim in currentUser.Claims!)
+        {
+            var claimKey = manager.ClaimTypes.Where(c => c.Value.Equals(claim.ClaimType)).First().Key;
+            claims!.Add(new KeyValuePair<string, string>(claimKey, claim.ClaimValue));
+        }
+
+        user.Email = currentUser.Email;
+
+        base.OnInitialized();
+    }
+
+    private async void UpdateUser()
+    {
+        editUser = true;
+        response = await manager!.UpdateUser(currentUser?.Id!, user?.Email!, currentUser?.LockoutEnd > DateTime.Now, selectedRoles.ToArray(), claims!);
         StateHasChanged();
     }
 }
@@ -964,22 +1170,25 @@ Finally, modify the **Shared/NavMenu.razor** with the following code:
             <NavLink class="nav-link" href="users">
                 <span class="oi oi-people" aria-hidden="true"></span> Users
             </NavLink>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="createuser">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Create User
+                </NavLink>
+            </div>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="createuser">
-                <span class="oi oi-plus" aria-hidden="true"></span> Add User
-            </NavLink>
-        </div>
+
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="roles">
                 <span class="oi oi-list" aria-hidden="true"></span> Roles
             </NavLink>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="createrole">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Create Role
+                </NavLink>
+            </div>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="createrole">
-                <span class="oi oi-plus" aria-hidden="true"></span> Add Role
-            </NavLink>
-        </div>
+
+
     </nav>
 </div>
 
@@ -997,11 +1206,15 @@ Finally, modify the **Shared/NavMenu.razor** with the following code:
 
 Now, run the `IdentityManagerBlazorServer` application and you should be able to see the following:
 
-![Identity Manager Blazor Server Application](images/2b267a3351fb957f10a22eca7cac73c93373a456f8663f6a0bc6487ebb14148d.png)  
+![Identity Manager Blazor Server Application](images/470627bca2f944cb98a9e15122d6bd8078040678b8c9ce918dbe7dccd4c26b98.png)  
+
+Give it a try, and create users, roles, and assign roles to users.
 
 ## Summary
 
-In this demo, we built a `netstandard` class library based on the `GitHub` repo by [mguinness](https://github.com/mguinness/IdentityManagerUI), and we built a Blazor Server application to make use of the `netstandard` class library we created, to add/list/delete users and roles.
+In this demo, we built a `netstandard` class library based on the `GitHub` repo by [mguinness](https://github.com/mguinness/IdentityManagerUI), to provide CRUD operations to Microsoft's Identity tables.
+
+Then we built a basic Blazor Server application to make use of the `netstandard` class library we created, to provide a UI to add/list/delete users, and roles.
 
 For more information about the technologies used, check the links in the resources section below.
 
@@ -1020,3 +1233,4 @@ The complete code for this demo can be found in the link below.
 | Basic Authentication and Authorization in Blazor Server: Carl Franklin's Blazor Train ep 26       | <https://www.youtube.com/watch?v=mbNFscKBsy8&list=PL8h4jt35t1wjvwFnvcB2LlYL4jLRzRmoz&index=30&t=790s> |
 | Basic Authentication and Authorization in Blazor Web Assembly: Carl Franklin's Blazor Train ep 27 | https://www.youtube.com/watch?v=I3A1R-oBK7c&list=PL8h4jt35t1wjvwFnvcB2LlYL4jLRzRmoz&index=31          |
 | mguinness/IdentityManagerUI                                                                       | <https://github.com/mguinness/IdentityManagerUI>                                                      |
+| How To Create A Checkbox List In Blazor                                                           | <https://www.c-sharpcorner.com/article/how-to-create-a-checkbox-list-in-blazor/>                      |
