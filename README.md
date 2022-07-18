@@ -66,17 +66,17 @@ Open Visual Studio 2022, and create a `Class Library` project.
 
 Add the following classes:
 
-1. **ApplicationRole.cs**
-1. **ApplicationUser.cs**
-1. **Extensions.cs**
-1. **Manager.cs**
-1. **Response.cs**
-1. **Role.cs**
-1. **User.cs**
+1. *ApplicationRole.cs*
+1. *ApplicationUser.cs*
+1. *Extensions.cs*
+1. *Manager.cs*
+1. *Response.cs*
+1. *Role.cs*
+1. *User.cs*
 
 Add the following code to each class:
 
-File **ApplicationRole.cs**:
+File *ApplicationRole.cs*:
 
 ```csharp
 using Microsoft.AspNetCore.Identity;
@@ -95,7 +95,7 @@ namespace IdentityManager
 }
 ```
 
-File **ApplicationUser.cs**:
+File *ApplicationUser.cs*:
 
 ```csharp
 using Microsoft.AspNetCore.Identity;
@@ -111,7 +111,7 @@ namespace IdentityManager
 }
 ```
 
-File **Extensions.cs**:
+File *Extensions.cs*:
 
 ```csharp
 using Microsoft.AspNetCore.Identity;
@@ -137,7 +137,7 @@ namespace IdentityManager
 }
 ```
 
-File **Manager.cs**:
+File *Manager.cs*:
 
 ```csharp
 using System.Linq;
@@ -493,7 +493,7 @@ namespace IdentityManager
 }
 ```
 
-File **Response.cs**:
+File *Response.cs*:
 
 ```csharp
 namespace IdentityManager
@@ -506,7 +506,7 @@ namespace IdentityManager
 }
 ```
 
-File **Role.cs**:
+File *Role.cs*:
 
 ```csharp
 using System.Collections.Generic;
@@ -522,7 +522,7 @@ namespace IdentityManager
 }
 ```
 
-File **User.cs**:
+File *User.cs*:
 
 ```csharp
 using System.Collections.Generic;
@@ -542,11 +542,11 @@ namespace IdentityManager
 }
 ```
 
->:blue_book: Notice that **Manager.cs** is the most important file, which contains all the `CRUD` operations performed against the `Microsoft Identity` tables.
+>:blue_book: Notice that *Manager.cs* is the most important file, which contains all the `CRUD` operations performed against the `Microsoft Identity` tables.
 
 ### Create a Blazor Server Application
 
-Now, let's create a Blazor Server Application called **IdentityManagerBlazorServer.csproj** that makes use of the `netstandard` class library we just built, to add, list, and delete users and roles.
+Now, let's create a Blazor Server Application called *IdentityManagerBlazorServer.csproj* that makes use of the `netstandard` class library we just built, to add, list, and delete users and roles.
 
 ![Add a new project](images/eb18ff6ba55116df0c558cced5ae7482cfe4b3e727e48334d7273b86c1bf06d6.png)  
 
@@ -556,21 +556,21 @@ Now, let's create a Blazor Server Application called **IdentityManagerBlazorServ
 
 Delete the following files as we are not going to need them:
 
-1. **WeatherForecast.cs**
-2. **WeatherForecastService.cs**
-3. **Counter.razor**
-4. **FetchData.razor**
-5. **SurveyPrompt.razor**
+1. *WeatherForecast.cs*
+2. *WeatherForecastService.cs*
+3. *Counter.razor*
+4. *FetchData.razor*
+5. *SurveyPrompt.razor*
 
 ![Delete Files](images/4600d13cf6d0e6a96613d98ebbeb07d023425a39bfc7cb880a22649a32d0e32d.png)  
 
-Delete the following line from the **Program.cs** file:
+Delete the following line from the *Program.cs* file:
 
 ```csharp
 builder.Services.AddSingleton<WeatherForecastService>();
 ```
 
-Modify the **appsettings.json** file with this code:
+Modify the *appsettings.json* file with this code:
 
 ```xml
 {
@@ -587,7 +587,7 @@ Modify the **appsettings.json** file with this code:
 }
 ```
 
-Modify the **Program.cs** file with the following code:
+Modify the *Program.cs* file with the following code:
 
 ```csharp
 using IdentityManager;
@@ -806,7 +806,7 @@ You can see the created database and the Identity tables by opening the `SQL Ser
 
 ![SQL Server Object Explorer Database](images/1b31ae57fdcc5a9f8a915aa77b206e3ea9e3454f75889b9a9750c76e0775cdc1.png)  
 
-Now, let's add a project reference to the `IdentityManager` class library, by adding the following code to the **IdentityManagerBlazorServer.csproj** file:
+Now, let's add a project reference to the `IdentityManager` class library, by adding the following code to the *IdentityManagerBlazorServer.csproj* file:
 
 ```xml
   <ItemGroup>
@@ -814,9 +814,9 @@ Now, let's add a project reference to the `IdentityManager` class library, by ad
   </ItemGroup>
 ```
 
-Now let's add the **Users.razor** and **Roles.razor** pages under the **Pages** folder, with the following code:
+Now let's add the *Users.razor* and *Roles.razor* pages under the *Pages* folder, with the following code:
 
-File **Users.razor**:
+File *Users.razor*:
 
 ```razor
 @page "/users"
@@ -1000,7 +1000,7 @@ else
 
 Blazor, does not have an out-of-the-box component for Checkbox Lists, so in order to add/edit roles for a user, we are going to add a custom component based on this blog article [How To Create A Checkbox List In Blazor](https://www.c-sharpcorner.com/article/how-to-create-a-checkbox-list-in-blazor/).
 
-Add a **CheckBoxList.razor** under the **Shared** folder with the following code:
+Add a *CheckBoxList.razor* under the *Shared* folder with the following code:
 
 ```razor
 @typeparam TItem  
@@ -1060,9 +1060,9 @@ Add a **CheckBoxList.razor** under the **Shared** folder with the following code
 }  
 ```
 
-Add a **Components** folder, and add files **CreateRole.razor**, **CreateUser.razor**, and **EditUser.razor**, with the following code:
+Add a *Components* folder, and add files *CreateRole.razor*, *CreateUser.razor*, and *EditUser.razor*, with the following code:
 
-File **CreateRole.razor**:
+File *CreateRole.razor*:
 
 ```razor
 @page "/createrole"
@@ -1118,7 +1118,7 @@ File **CreateRole.razor**:
 }
 ```
 
-File **CreateUser.razor**:
+File *CreateUser.razor*:
 
 ```razor
 @page "/createuser"
@@ -1193,7 +1193,7 @@ File **CreateUser.razor**:
 }
 ```
 
-File **EditUser.razor**:
+File *EditUser.razor*:
 
 ```razor
 @page "/edituser/{userId}"
@@ -1296,7 +1296,7 @@ File **EditUser.razor**:
 }
 ```
 
-Finally, modify the **Shared/NavMenu.razor** with the following code:
+Finally, modify the *Shared/NavMenu.razor* with the following code:
 
 ```razor
 <div class="top-row ps-3 navbar navbar-dark">
