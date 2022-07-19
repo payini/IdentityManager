@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IdentityManagerBlazorServer.Data
 {
-    // Change public class ApplicationDbContext : IdentityDbContext to bottom
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -12,7 +11,6 @@ namespace IdentityManagerBlazorServer.Data
         {
         }
 
-        //add OnModelCreating
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

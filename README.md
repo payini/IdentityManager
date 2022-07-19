@@ -805,7 +805,15 @@ app.Run();
 
 >:blue_book: Notice the code `builder.Services.AddScoped<Manager>();` which will allow our pages to inject an instance of the `Manager` provided by the `IdentityManager` class library, to be able to call it's CRUD operations available.
 
-Open the *ApplicationDbContext.cs* file, and add the following navigation properties, under `protected override void OnModelCreating(ModelBuilder builder)` below `base.OnModelCreating(builder);`:
+Open the *ApplicationDbContext.cs* file, and make the following changes:
+
+Change `public class ApplicationDbContext : IdentityDbContext` to `public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>`:
+
+```csharp
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
+```
+
+Add the following navigation properties, under `protected override void OnModelCreating(ModelBuilder builder)` below `base.OnModelCreating(builder);`:
 
 ```csharp
 builder.Entity<ApplicationUser>()
@@ -825,6 +833,48 @@ builder.Entity<ApplicationRole>()
     .HasForeignKey(r => r.RoleId)
     .IsRequired()
     .OnDelete(DeleteBehavior.Cascade);
+```
+
+The complete *ApplicationDbContext.cs* file should look like this:
+
+```csharp
+using IdentityManager;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+
+namespace IdentityManagerBlazorServer.Data
+{
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
+    {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
+        {
+        }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            builder.Entity<ApplicationUser>()
+                .HasMany(p => p.Roles).WithOne()
+                .HasForeignKey(p => p.UserId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ApplicationUser>()
+                .HasMany(e => e.Claims)
+                .WithOne().HasForeignKey(e => e.UserId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ApplicationRole>()
+                .HasMany(r => r.Claims).WithOne()
+                .HasForeignKey(r => r.RoleId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+        }
+    }
+}
 ```
 
 Open the `Package Manager Console`:
