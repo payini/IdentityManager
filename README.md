@@ -645,6 +645,28 @@ app.Run();
 
 >:blue_book: Notice the code `builder.Services.AddScoped<Manager>();` which will allow our pages to inject an instance of the `Manager` provided by the `IdentityManager` class library, to be able to call it's CRUD operations available.
 
+Open the *ApplicationDbContext.cs* file, and add the following navigation properties, under `protected override void OnModelCreating(ModelBuilder builder)` below `base.OnModelCreating(builder);`:
+
+```csharp
+builder.Entity<ApplicationUser>()
+    .HasMany(p => p.Roles).WithOne()
+    .HasForeignKey(p => p.UserId)
+    .IsRequired()
+    .OnDelete(DeleteBehavior.Cascade);
+
+builder.Entity<ApplicationUser>()
+    .HasMany(e => e.Claims)
+    .WithOne().HasForeignKey(e => e.UserId)
+    .IsRequired()
+    .OnDelete(DeleteBehavior.Cascade);
+
+builder.Entity<ApplicationRole>()
+    .HasMany(r => r.Claims).WithOne()
+    .HasForeignKey(r => r.RoleId)
+    .IsRequired()
+    .OnDelete(DeleteBehavior.Cascade);
+```
+
 Open the `Package Manager Console`:
 
 ![Package Manager Console](images/785ec3c1c12042bcbe08768713fe7a47a8ec5d0ffcacd439fff003aa19f66275.png)  
