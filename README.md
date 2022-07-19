@@ -66,13 +66,13 @@ Open Visual Studio 2022, and create a `Class Library` project.
 
 Add the following classes:
 
-1. *ApplicationRole.cs*
-1. *ApplicationUser.cs*
-1. *Extensions.cs*
-1. *Manager.cs*
-1. *Response.cs*
-1. *Role.cs*
-1. *User.cs*
+1. *ApplicationRole.cs*: Custom implementation of IdentityRole.
+1. *ApplicationUser.cs*: Custom implementation of IdentityUser.
+1. *Extensions.cs*: Extensions class to provide a useful method to concatenates all IdentityError descriptions into a single string.
+1. *Manager.cs*: Provide all the CRUD operations against the `ASP.NET Core Identity` tables.
+1. *Response.cs*: General response object.
+1. *Role.cs*: Role model.
+1. *User.cs*: User model.
 
 Add the following code to each class:
 
@@ -84,6 +84,9 @@ using System.Collections.Generic;
 
 namespace IdentityManager
 {
+    /// <summary>
+    /// Custom implementation of IdentityRole.
+    /// </summary>
     public class ApplicationRole : IdentityRole
     {
         public ApplicationRole() { }
@@ -103,6 +106,9 @@ using System.Collections.Generic;
 
 namespace IdentityManager
 {
+    /// <summary>
+    /// Custom implementation of IdentityUser.
+    /// </summary>
     public class ApplicationUser : IdentityUser
     {
         public virtual ICollection<IdentityUserRole<string>>? Roles { get; set; }
@@ -121,9 +127,18 @@ namespace IdentityManager
 {
     public static class Extensions
     {
+        /// <summary>
+        /// Extension method that takes a collection of IEnumerable<IdentityError> and 
+        /// concatenates all error descriptions into a string.
+        /// </summary>
+        /// <param name="errors">Collection of IdentityError objects.</param>
+        /// <returns>A string containing all error messages in the collection.</returns>
         public static string GetAllMessages(this IEnumerable<IdentityError> errors)
         {
             var result = string.Empty;
+
+            if (errors == null)
+                return result;
 
             foreach (var error in errors)
             {
@@ -139,6 +154,19 @@ namespace IdentityManager
 
 File *Manager.cs*:
 
+This is the most important file of the class library, which provides the following methods:
+
+1. GetUsers: Returns a collection of users from the database.
+1. CreateUser: Create a user in the database.
+1. GetUser: Get user by ID.
+1. UpdateUser: Update the user.
+1. DeleteUser: Delete user by ID.
+1. ResetPassword: Reset user password.
+1. GetRoles: Get user roles.
+1. CreateRole: Create role.
+1. UpdateRole: Update role.
+1. DeleteRole: Delete role.
+
 ```csharp
 using System.Linq;
 using Microsoft.AspNetCore.Identity;
@@ -151,34 +179,57 @@ using System.Threading.Tasks;
 
 namespace IdentityManager
 {
+    /// <summary>
+    /// Provide all the CRUD operations against the ASP.NET Core Identity tables.
+    /// </summary>
     public class Manager
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
+        /// <summary>
+        /// Contains an updated list of all Roles in the database.
+        /// </summary>
         public Dictionary<string, string> Roles;
         public readonly Dictionary<string, string> ClaimTypes;
 
+        /// <summary>
+        /// Manager constructor that sets the userManager, roleManager, and ClaimTypes.
+        /// </summary>
+        /// <param name="userManager">Exposes CRUD operations for users, from the Microsoft.Extensions.Identity.Core assembly in the Microsoft.AspNetCore.Identity namespace.</param>
+        /// <param name="roleManager">Exposes CRUD operations for roles, from the Microsoft.Extensions.Identity.Core assembly in the Microsoft.AspNetCore.Identity namespace.</param>
         public Manager(UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+
+            // Set all the roles in the database, ordered by Name ascending.
             Roles = roleManager.Roles.OrderBy(r => r.Name).ToDictionary(r => r.Id, r => r.Name);
 
-            var fldInfo = typeof(ClaimTypes).GetFields(BindingFlags.Static | BindingFlags.Public);
-            ClaimTypes = fldInfo.ToDictionary(i => i.Name, i => (string)i.GetValue(null));
+            var fieldInfo = typeof(ClaimTypes).GetFields(BindingFlags.Static | BindingFlags.Public);
+
+            // Set all the claim types as defined in the System.Security.Claims constants.
+            ClaimTypes = fieldInfo.ToDictionary(i => i.Name, i => (string)i.GetValue(null));
         }
 
-        public IEnumerable<User> GetUsers(string? filter = null) // , string direction = "asc"
+        /// <summary>
+        /// Returns a collection of users from the database.
+        /// </summary>
+        /// <param name="filter">When provided, filter the users based on partial matches of email, and username.</param>
+        /// <returns>A collection of User objects.</returns>
+        public IEnumerable<User> GetUsers(string? filter = null)
         {
             filter = filter?.Trim();
 
+            // Get all users, including roles, and claims, from the database.
             var users = _userManager.Users.Include(u => u.Roles).Include(u => u.Claims);
 
+            // Filter user list, and order by username ascending.
             var query = users.Where(u =>
                 (string.IsNullOrWhiteSpace(filter) || u.Email.Contains(filter)) ||
                 (string.IsNullOrWhiteSpace(filter) || u.UserName.Contains(filter))
             ).OrderBy(u => u.UserName);
 
+            // Executes query and set properties.
             var result = query.ToArray().Select(u => new User
             {
                 Id = u.Id,
@@ -194,6 +245,15 @@ namespace IdentityManager
             return result;
         }
 
+        /// <summary>
+        /// Create a user in the database.
+        /// </summary>
+        /// <param name="userName">Username for the account.</param>
+        /// <param name="name">Name of the user.</param>
+        /// <param name="email">Email of the user.</param>
+        /// <param name="password">Password for the user.</param>
+        /// <returns>Response object.</returns>
+        /// <exception cref="ArgumentNullException">When any of the arguments is not provided, an ArgumentNullException will be thrown.</exception>
         public async Task<Response> CreateUser(string userName, string name, string email, string password)
         {
             if (string.IsNullOrWhiteSpace(userName))
@@ -210,6 +270,8 @@ namespace IdentityManager
 
             var response = new Response();
             var user = new ApplicationUser() { Email = email, UserName = userName };
+
+            // Create user.
             var result = await _userManager.CreateAsync(user, password);
 
             if (result.Succeeded)
@@ -227,19 +289,37 @@ namespace IdentityManager
             return response;
         }
 
+        /// <summary>
+        /// Get user by ID.
+        /// </summary>
+        /// <param name="id">ID of the user.</param>
+        /// <returns>Returns the ApplicationUser object.</returns>
+        /// <exception cref="ArgumentNullException">When any of the arguments is not provided, an ArgumentNullException will be thrown.</exception>
+        /// <exception cref="Exception">Throws an exception when the user is not found.</exception>
         public async Task<ApplicationUser> GetUser(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentNullException("id", "The argument id cannot be null or empty.");
 
+            // Gets the user.
             var user = await _userManager.FindByIdAsync(id);
 
             if (user == null)
-                throw new ArgumentException("User not found");
+                throw new Exception("User not found.");
 
             return user;
         }
 
+        /// <summary>
+        /// Update the user.
+        /// </summary>
+        /// <param name="id">ID of the user.</param>
+        /// <param name="email">Email of the user.</param>
+        /// <param name="locked">Weather the user account is locked or not.</param>
+        /// <param name="roles">List of roles the user should be added to.</param>
+        /// <param name="claims">List of claims the user should be added to.</param>
+        /// <returns>Response object.</returns>
+        /// <exception cref="ArgumentNullException">When any of the arguments is not provided, an ArgumentNullException will be thrown.</exception>
         public async Task<Response> UpdateUser(string id, string email, bool locked, string[] roles, List<KeyValuePair<string, string>> claims)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -255,32 +335,41 @@ namespace IdentityManager
 
             try
             {
+                // Gets the user by ID.
                 var user = await _userManager.FindByIdAsync(id);
                 if (user == null)
                     response.Messages = "User not found.";
 
+                // Update only the updatable properties.
                 user!.Email = email;
                 user.LockoutEnd = locked ? DateTimeOffset.MaxValue : default(DateTimeOffset?);
 
+                // Update user.
                 var result = await _userManager.UpdateAsync(user);
 
                 if (result.Succeeded)
                 {
                     response.Messages += $"Updated user {user.UserName}";
 
+                    // Get the current user roles.
                     var userRoles = await _userManager.GetRolesAsync(user);
 
+                    // Add specified user roles.
                     foreach (string role in roles.Except(userRoles))
                         await _userManager.AddToRoleAsync(user, role);
 
+                    // Remove any roles, not specified, from the user. 
                     foreach (string role in userRoles.Except(roles))
                         await _userManager.RemoveFromRoleAsync(user, role);
 
+                    // Get the current user claims.
                     var userClaims = await _userManager.GetClaimsAsync(user);
 
+                    // Add specified user claims.
                     foreach (var kvp in claims.Where(a => !userClaims.Any(b => ClaimTypes[a.Key] == b.Type && a.Value == b.Value)))
                         await _userManager.AddClaimAsync(user, new Claim(ClaimTypes[kvp.Key], kvp.Value));
 
+                    // Remove any claims, not specified, from the user. 
                     foreach (var claim in userClaims.Where(a => !claims.Any(b => a.Type == ClaimTypes[b.Key] && a.Value == b.Value)))
                         await _userManager.RemoveClaimAsync(user, claim);
                 }
@@ -297,6 +386,12 @@ namespace IdentityManager
             return response;
         }
 
+        /// <summary>
+        /// Delete user by ID.
+        /// </summary>
+        /// <param name="id">ID of the user.</param>
+        /// <returns>Response object.</returns>
+        /// <exception cref="ArgumentNullException">When any of the arguments is not provided, an ArgumentNullException will be thrown.</exception>
         public async Task<Response> DeleteUser(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -306,11 +401,13 @@ namespace IdentityManager
 
             try
             {
+                // Get the user.
                 var user = await _userManager.FindByIdAsync(id);
 
                 if (user == null)
                     response.Messages = "User not found.";
 
+                // Delete the user.
                 var result = await _userManager.DeleteAsync(user!);
 
                 if (result.Succeeded)
@@ -328,6 +425,14 @@ namespace IdentityManager
             return response;
         }
 
+        /// <summary>
+        /// Reset user password.
+        /// </summary>
+        /// <param name="id">ID of the user.</param>
+        /// <param name="password">Password for the user.</param>
+        /// <param name="verify">Password for verification purposes.</param>
+        /// <returns>Response object.</returns>
+        /// <exception cref="ArgumentNullException">When any of the arguments is not provided, an ArgumentNullException will be thrown.</exception>
         public async Task<Response> ResetPassword(string id, string password, string verify)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -346,14 +451,17 @@ namespace IdentityManager
                 if (password != verify)
                     response.Messages = "Passwords entered do not match.";
 
+                // Get the user.
                 var user = await _userManager.FindByIdAsync(id);
 
                 if (user == null)
                     response.Messages = "User not found.";
 
+                // Delete existing password if it exists.
                 if (await _userManager.HasPasswordAsync(user!))
                     await _userManager.RemovePasswordAsync(user!);
 
+                // Add new password for the user.
                 var result = await _userManager.AddPasswordAsync(user!, password);
 
                 if (result.Succeeded)
@@ -371,14 +479,22 @@ namespace IdentityManager
             return response;
         }
 
+        /// <summary>
+        /// Get user roles.
+        /// </summary>
+        /// <param name="filter">When provided, filter the roles based on partial matches of role name.</param>
+        /// <returns>A collection of role objects.</returns>
         public IEnumerable<Role> GetRoles(string? filter = null)
         {
+            // Get all roles, including claims, from the database.
             var roles = _roleManager.Roles.Include(r => r.Claims);
-
+            
+            // Filter role list, and order by name ascending.
             var query = roles.Where(r =>
                 (string.IsNullOrWhiteSpace(filter) || r.Name.Contains(filter))
             ).OrderBy(r => r.Name); ;
 
+            // Executes query and set properties.
             var result = query.ToArray().Select(r => new Role
             {
                 Id = r.Id,
@@ -390,6 +506,12 @@ namespace IdentityManager
             return result;
         }
 
+        /// <summary>
+        /// Create role.
+        /// </summary>
+        /// <param name="name">Role name.</param>
+        /// <returns>Response object.</returns>
+        /// <exception cref="ArgumentNullException">When any of the arguments is not provided, an ArgumentNullException will be thrown.</exception>
         public async Task<Response> CreateRole(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -397,6 +519,8 @@ namespace IdentityManager
 
             var response = new Response();
             var role = new ApplicationRole(name);
+
+            // Create role.
             var result = await _roleManager.CreateAsync(role);
 
             if (!result.Succeeded)
@@ -406,11 +530,20 @@ namespace IdentityManager
 
             response.Success = result.Succeeded;
 
+            // Update the current collection of roles in the database.
             Roles = _roleManager.Roles.OrderBy(r => r.Name).ToDictionary(r => r.Id, r => r.Name);
 
             return response;
         }
 
+        /// <summary>
+        /// Update role.
+        /// </summary>
+        /// <param name="id">ID of the role.</param>
+        /// <param name="name">Name of the role.</param>
+        /// <param name="claims">List of claims the role should be added to.</param>
+        /// <returns>Response object.</returns>
+        /// <exception cref="ArgumentNullException">When any of the arguments is not provided, an ArgumentNullException will be thrown.</exception>
         public async Task<Response> UpdateRole(string id, string name, List<KeyValuePair<string, string>> claims)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -423,23 +556,30 @@ namespace IdentityManager
 
             try
             {
+                // Get role.
                 var role = await _roleManager.FindByIdAsync(id);
+                
                 if (role == null)
                     response.Messages = "Role not found.";
 
+                // Update updatable properties.
                 role!.Name = name;
 
+                // Update role.
                 var result = await _roleManager.UpdateAsync(role);
 
                 if (result.Succeeded)
                 {
                     response.Messages += $"Updated role {role.Name}";
 
+                    // Get the current role claims.
                     var roleClaims = await _roleManager.GetClaimsAsync(role);
 
+                    // Add specified role claims.
                     foreach (var kvp in claims.Where(a => !roleClaims.Any(b => ClaimTypes[a.Key] == b.Type && a.Value == b.Value)))
                         await _roleManager.AddClaimAsync(role, new Claim(ClaimTypes[kvp.Key], kvp.Value));
 
+                    // Remove any claims, not specified, from the role.
                     foreach (var claim in roleClaims.Where(a => !claims.Any(b => a.Type == ClaimTypes[b.Key] && a.Value == b.Value)))
                         await _roleManager.RemoveClaimAsync(role, claim);
                 }
@@ -453,11 +593,18 @@ namespace IdentityManager
                 response.Messages = $"Failure updating role {id}: {ex.Message}";
             }
 
+            // Update the current collection of roles in the database.
             Roles = _roleManager.Roles.OrderBy(r => r.Name).ToDictionary(r => r.Id, r => r.Name);
 
             return response;
         }
 
+        /// <summary>
+        /// Delete role.
+        /// </summary>
+        /// <param name="id">ID of the role.</param>
+        /// <returns>Response object.</returns>
+        /// <exception cref="ArgumentNullException">When any of the arguments is not provided, an ArgumentNullException will be thrown.</exception>
         public async Task<Response> DeleteRole(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -467,10 +614,13 @@ namespace IdentityManager
 
             try
             {
+                // Get role.
                 var role = await _roleManager.FindByIdAsync(id);
+
                 if (role == null)
                     response.Messages = "Role not found.";
 
+                // Delete role.
                 var result = await _roleManager.DeleteAsync(role!);
 
                 if (result.Succeeded)
@@ -485,6 +635,7 @@ namespace IdentityManager
                 response.Messages = $"Failure deleting role {id}: {ex.Message}";
             }
 
+            // Update the current collection of roles in the database.
             Roles = _roleManager.Roles.OrderBy(r => r.Name).ToDictionary(r => r.Id, r => r.Name);
 
             return response;
@@ -498,6 +649,9 @@ File *Response.cs*:
 ```csharp
 namespace IdentityManager
 {
+    /// <summary>
+    /// General response object.
+    /// </summary>    
     public class Response
     {
         public bool Success { get; internal set; } = false;
@@ -513,6 +667,9 @@ using System.Collections.Generic;
 
 namespace IdentityManager
 {
+    /// <summary>
+    /// Role model.
+    /// </summary>    
     public class Role
     {
         public string? Id { get; set; }
@@ -529,6 +686,9 @@ using System.Collections.Generic;
 
 namespace IdentityManager
 {
+    /// <summary>
+    /// User model.
+    /// </summary>
     public class User
     {
         public string? Id { get; set; }
@@ -542,7 +702,7 @@ namespace IdentityManager
 }
 ```
 
->:blue_book: Notice that *Manager.cs* is the most important file, which contains all the `CRUD` operations performed against the `Microsoft Identity` tables.
+>:blue_book: Notice that *Manager.cs* is the most important file, which contains all the `CRUD` operations performed against the `ASP.NET Core Identity` tables.
 
 ### Create a Blazor Server Application
 
@@ -1383,9 +1543,11 @@ Give it a try, and create users, roles, and assign roles to users.
 
 ## Summary
 
-In this demo, we built a `netstandard` class library based on the `GitHub` repo by [mguinness](https://github.com/mguinness/IdentityManagerUI), to provide CRUD operations to Microsoft Identity tables.
+In this demo, we built a `netstandard` class library based on the `GitHub` repo by [mguinness](https://github.com/mguinness/IdentityManagerUI), to provide CRUD operations to `ASP.NET Core Identity` tables.
 
 Then we built a basic Blazor Server application to make use of the `netstandard` class library we created, to provide a UI to add/list/delete users, and roles.
+
+>:blue_book: This is a basic UI demo, just to demonstrate how to use the `IdentityManager` class library, but does not contain everything needed to fully administer users, and roles. It is up to you, to build your own UI to fully manage users, roles, and claims.
 
 For more information about the technologies used, check the links in the resources section below.
 
@@ -1397,11 +1559,12 @@ The complete code for this demo can be found in the link below.
 
 ## Resources
 
-| Resource Title                                                                                    | Url                                                                                                   |
-| ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| The .NET Show with Carl Franklin                                                                  | <https://www.youtube.com/playlist?list=PL8h4jt35t1wgW_PqzZ9USrHvvnk8JMQy_>                            |
-| Download .NET                                                                                     | <https://dotnet.microsoft.com/en-us/download>                                                         |
-| Basic Authentication and Authorization in Blazor Server: Carl Franklin's Blazor Train ep 26       | <https://www.youtube.com/watch?v=mbNFscKBsy8&list=PL8h4jt35t1wjvwFnvcB2LlYL4jLRzRmoz&index=30&t=790s> |
-| Basic Authentication and Authorization in Blazor Web Assembly: Carl Franklin's Blazor Train ep 27 | https://www.youtube.com/watch?v=I3A1R-oBK7c&list=PL8h4jt35t1wjvwFnvcB2LlYL4jLRzRmoz&index=31          |
-| mguinness/IdentityManagerUI                                                                       | <https://github.com/mguinness/IdentityManagerUI>                                                      |
-| How To Create A Checkbox List In Blazor                                                           | <https://www.c-sharpcorner.com/article/how-to-create-a-checkbox-list-in-blazor/>                      |
+| Resource Title                                                                                    | Url                                                                                                                  |
+| ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| The .NET Show with Carl Franklin                                                                  | <https://www.youtube.com/playlist?list=PL8h4jt35t1wgW_PqzZ9USrHvvnk8JMQy_>                                           |
+| Download .NET                                                                                     | <https://dotnet.microsoft.com/en-us/download>                                                                        |
+| Basic Authentication and Authorization in Blazor Server: Carl Franklin's Blazor Train ep 26       | <https://www.youtube.com/watch?v=mbNFscKBsy8&list=PL8h4jt35t1wjvwFnvcB2LlYL4jLRzRmoz&index=30&t=790s>                |
+| Basic Authentication and Authorization in Blazor Web Assembly: Carl Franklin's Blazor Train ep 27 | https://www.youtube.com/watch?v=I3A1R-oBK7c&list=PL8h4jt35t1wjvwFnvcB2LlYL4jLRzRmoz&index=31                         |
+| mguinness/IdentityManagerUI                                                                       | <https://github.com/mguinness/IdentityManagerUI>                                                                     |
+| Introduction to Identity on ASP.NET Core                                                          | https://docs.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-6.0&tabs=visual-studio |
+| How To Create A Checkbox List In Blazor                                                           | <https://www.c-sharpcorner.com/article/how-to-create-a-checkbox-list-in-blazor/>                                     |
