@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace IdentityManager
 {
+    /// <summary>
+    /// Custom implementation of IdentityRole.
+    /// </summary>
     public class ApplicationRole : IdentityRole
     {
         public ApplicationRole() { }

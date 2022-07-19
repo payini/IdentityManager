@@ -2,6 +2,9 @@
 
 namespace IdentityManager
 {
+    /// <summary>
+    /// User model.
+    /// </summary>
     public class User
     {
         public string? Id { get; set; }

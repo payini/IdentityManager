@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace IdentityManager
 {
+    /// <summary>
+    /// Custom implementation of IdentityUser.
+    /// </summary>
     public class ApplicationUser : IdentityUser
     {
         public virtual ICollection<IdentityUserRole<string>>? Roles { get; set; }

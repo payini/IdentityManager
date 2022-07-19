@@ -2,6 +2,9 @@
 
 namespace IdentityManager
 {
+    /// <summary>
+    /// Role model.
+    /// </summary>
     public class Role
     {
         public string? Id { get; set; }

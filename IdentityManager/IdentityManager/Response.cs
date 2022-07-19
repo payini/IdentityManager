@@ -1,5 +1,8 @@
 ﻿namespace IdentityManager
 {
+    /// <summary>
+    /// General response object.
+    /// </summary>
     public class Response
     {
         public bool Success { get; internal set; } = false;
